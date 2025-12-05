@@ -1,0 +1,29 @@
+[project]
+name = "ascii_nn"
+version = "0.0.1"
+authors = [
+  { name="Daniel Baranov", email="author@example.com" },
+]
+description = "A small example package"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+dependencies = [
+  "numpy",
+  "Pillow",
+  "torch",
+  "torchvision",
+  "platformdirs",
+  "opencv-python",
+  "rembg"
+]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"
