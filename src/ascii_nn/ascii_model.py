@@ -1,3 +1,4 @@
+
 import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -7,10 +8,19 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
+import importlib.resources as pkg_resources
+import ascii_nn.data
+
 from platformdirs import user_cache_dir
 
+
 FONT_SIZE = 35
-FONT_PATH = "/System/Library/Fonts/Apple Symbols.ttf"
+try:
+    with pkg_resources.path(ascii_nn.data, "RobotoMono-VariableFont_wght.ttf") as font_path:
+        FONT_PATH = str(font_path)
+except (FileNotFoundError, ModuleNotFoundError):
+    print("font not found. fallback")
+    FONT_PATH = "/System/Library/Fonts/Apple Symbols.ttf"
 
 EDGE_CHARS = r" -|+/\\_^v<>[]{}()~"
 BG_CHARS = " .:-=+*#%@"
