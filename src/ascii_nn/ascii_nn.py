@@ -32,16 +32,8 @@ class ascii_nn:
             print("Using CPU.")
         self.edge_model, self.bg_model, self.tile_h, self.tile_w = load_model()
 
-    
-    def convert(self, img_path, n_lines=40, noise_reduction=2, line_weight=1, text_ratio=2.5):
+    def convert(self, source_img, n_lines=40, noise_reduction=2, line_weight=1, text_ratio=2.5):
         """Main entry point to convert image to ASCII."""
-
-        # Load Image
-        try:
-            source_img = cv2.imread(img_path)
-        except Exception as e:
-            print(f"Could not open image: {e}")
-            return
 
         # remove background
         height, width = source_img.shape[:2]
