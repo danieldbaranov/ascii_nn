@@ -18,6 +18,48 @@ EDGE_CHARS = r" -|+/\\_^v<>[]{}()~"
 BG_CHARS = " .:-=+*#%@"
 #BG_CHARS = " .·'`"
 
+def get_square_crop(img_array):
+    if img_array.shape[2] == 4:
+        alpha = img_array[:, :, 3]
+        rows = np.any(alpha > 0, axis=1)
+        cols = np.any(alpha > 0, axis=0)
+    else:
+        non_empty = np.any(img_array > 0, axis=2)
+        rows = np.any(non_empty, axis=1)
+        cols = np.any(non_empty, axis=0)
+
+    if not rows.any() or not cols.any():
+        return None
+
+    top, bottom = np.where(rows)[0][[0, -1]]
+    left, right = np.where(cols)[0][[0, -1]]
+
+    width = right - left
+    height = bottom - top
+    size = max(width, height) + 1
+
+    center_x = (left + right) // 2
+    center_y = (top + bottom) // 2
+
+    new_left = center_x - size // 2
+    new_top = center_y - size // 2
+
+    result = np.zeros((size, size, 4), dtype=img_array.dtype)
+
+    src_left = max(0, new_left)
+    src_top = max(0, new_top)
+    src_right = min(img_array.shape[1], new_left + size)
+    src_bottom = min(img_array.shape[0], new_top + size)
+
+    dst_left = src_left - new_left
+    dst_top = src_top - new_top
+    dst_right = dst_left + (src_right - src_left)
+    dst_bottom = dst_top + (src_bottom - src_top)
+
+    result[dst_top:dst_bottom, dst_left:dst_right] = img_array[src_top:src_bottom, src_left:src_right]
+
+    return result
+
 class ascii_nn:
     def __init__(self):
 
@@ -39,8 +81,9 @@ class ascii_nn:
         height, width = source_img.shape[:2]
         source_img = cv2.resize(source_img, (width * 4, height * 4), interpolation=cv2.INTER_CUBIC)
         source_img = rembg.remove(source_img, session=session)
-        source_img = cv2.cvtColor(source_img, cv2.COLOR_BGRA2BGR)
-        print(source_img.shape)
+
+         # Get bounding box of non-transparent pixels
+        source_img = get_square_crop(source_img)
 
         # Get Edges
         edges, rows, cols = edge_detection.get_edges(
