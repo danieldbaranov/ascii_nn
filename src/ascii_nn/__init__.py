@@ -1,3 +1,3 @@
-from . import ascii_nn
+from . import AsciiModule as ascii_nn
 
 __all__ = ["ascii_nn"]
