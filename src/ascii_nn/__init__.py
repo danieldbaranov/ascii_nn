@@ -1,3 +1,3 @@
-from . import AsciiModule as ascii_nn
+from .models.AsciiModule import AsciiModule
 
-__all__ = ["ascii_nn"]
+__all__ = ["AsciiModule"]
