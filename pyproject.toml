@@ -20,8 +20,7 @@ dependencies = [
   "torch",
   "torchvision",
   "platformdirs",
-  "opencv-python",
-  "rembg"
+  "kornia",
 ]
 
 [project.urls]
