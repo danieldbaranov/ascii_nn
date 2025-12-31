@@ -1,56 +1,62 @@
 from abc import ABC, abstractmethod
 from torch import nn
-from .constants import H, W
+import torch.nn.functional as F
+from PIL import ImageFont
+import importlib.resources
+
+FONT_SIZE = 16
+PAD = 0
+RATIO = 2.5
+
+FONT_PATH = str(importlib.resources.files('ascii_nn.data') / 'Saitamaar-Regular.ttf')
+FONT = ImageFont.truetype(FONT_PATH, FONT_SIZE)
+
+H = FONT_SIZE + PAD
+W = int((FONT_SIZE + PAD) / RATIO + 0.5)
+
 
 class SimpleAsciiModule(nn.Module, ABC):
-    @abstractmethod
-    def __init__(self, preprocess: callable=None, target_rows=None, target_cols=None):
+    """
+    Base class for ASCII art generation modules.
+    
+    Args:
+        preprocess: Optional preprocessing function for input tensors
+        target_rows: Fixed output rows (0 = derive from image/aspect ratio)
+        target_cols: Fixed output cols (0 = derive from image/aspect ratio)
+        font: PIL font for character rendering
+        font_size: Font size in pixels
+    """
+    
+    def __init__(self, preprocess=None, target_rows=0, target_cols=0, font=FONT, font_size=FONT_SIZE):
         super().__init__()
-        self.preprocess = preprocess if preprocess is not None else lambda x: x
-        # Store target dimensions - these are set in __init__ to avoid if statements in forward
         self.target_rows = target_rows
         self.target_cols = target_cols
-        # Determine dimension calculation mode at init time
-        self.use_target_rows = target_rows is not None
-        self.use_target_cols = target_cols is not None
+        self.font = font
+        self.H = font_size + PAD
+        self.W = int((font_size + PAD) / RATIO + 0.5)
 
-    @abstractmethod
-    def info(self):
-        pass
-
-    @abstractmethod
-    def forward(self, orig_im):
-        img_tensor = self.preprocess(orig_im)
-        pass
-    
-    def _calculate_output_dims(self, img_tensor):
-        """Calculate output dimensions based on stored target values or image size."""
-        # Use stored target values if available, otherwise calculate from image
-        # Avoids if statements by using list indexing with boolean-to-int conversion
-        img_rows = img_tensor.shape[-2] // H
-        img_cols = img_tensor.shape[-1] // W
+    def _prepare_image(self, img_tensor):
+        """Resize image preserving aspect ratio based on target dimensions."""
+        img_h, img_w = img_tensor.shape[-2], img_tensor.shape[-1]
+        aspect = img_w / img_h  # pixel aspect ratio
         
-        # Use list indexing: [img_rows, self.target_rows][int(self.use_target_rows)]
-        # This avoids if statements and is fully compilable
-        num_rows = [img_rows, self.target_rows][int(self.use_target_rows)]
-        num_cols = [img_cols, self.target_cols][int(self.use_target_cols)]
+        if self.target_rows and self.target_cols:
+            num_rows, num_cols = self.target_rows, self.target_cols
+        elif self.target_rows:
+            num_rows = self.target_rows
+            num_cols = max(1, round(self.target_rows * aspect * self.H / self.W))
+        elif self.target_cols:
+            num_cols = self.target_cols
+            num_rows = max(1, round(self.target_cols / aspect * self.W / self.H))
+        else:
+            num_rows = img_h // self.H
+            num_cols = img_w // self.W
         
-        return num_rows, num_cols
-
-class TrainableAsciiModule(SimpleAsciiModule):
-    @abstractmethod
-    def __init__(self):
-        super().__init__()
+        target_size = (num_rows * self.H, num_cols * self.W)
+        img_tensor = F.interpolate(img_tensor, size=target_size, mode='bilinear', align_corners=False)
+        
+        return img_tensor, num_rows, num_cols
 
     @abstractmethod
-    def train(self):
-        pass
-
-    @abstractmethod
-    def info(self):
-        pass
-
-    @abstractmethod
-    def forward(self, orig_im):
-        img_tensor = self.preprocess(orig_im)
+    def forward(self, img_tensor):
         pass

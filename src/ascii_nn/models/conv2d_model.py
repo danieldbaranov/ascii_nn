@@ -1,40 +1,42 @@
 import torch
 from torch import nn
 
-from base_ascii_module import BaseAsciiModule
+from ascii_nn.base_ascii_module import SimpleAsciiModule
+from ascii_nn.charsets import SHIFT_JIS
+from ascii_nn.utilities import _create_char_tensor
+import kornia
 
-from constants import H, W
 
-class Conv2DModel(BaseAsciiModule):
-    def __init__(self, chars):
-        super(Conv2DModel, self).__init__()
-        self.glyph_kernels = self.normalize_kernels(chars)
-    def normalize_kernels(self, k):
-        k = k - k.mean(dim=(2,3), keepdim=True)
-        k = k / (k.norm(dim=(2,3), keepdim=True) + 1e-6)
+class Conv2DModel(SimpleAsciiModule):
+    def __init__(self, chars=SHIFT_JIS, target_rows=0, target_cols=0):
+        super().__init__(target_rows=target_rows, target_cols=target_cols)
+        self.glyph_kernels = self._normalize_kernels(
+            _create_char_tensor(chars, self.font, self.W, self.H)
+        )
+
+    def _normalize_kernels(self, k):
+        k = k - k.mean(dim=(2, 3), keepdim=True)
+        k = k / (k.norm(dim=(2, 3), keepdim=True) + 1e-6)
         return k
+
     def forward(self, img_tensor):
-        img = img_tensor
-        img = img - img.mean(dim=(2, 3), keepdim=True)
+        img_tensor, num_rows, num_cols = self._prepare_image(img_tensor)
+
+        img_tensor = kornia.filters.Canny()(img_tensor)[0]
+
+        # Normalize input
+        img = img_tensor - img_tensor.mean(dim=(2, 3), keepdim=True)
         img = img / (img.norm(dim=(2, 3), keepdim=True) + 1e-6)
 
         logits = nn.functional.conv2d(
             img,
             self.glyph_kernels,
-            stride=(H, W)
+            stride=(self.H, self.W)
         )
 
-        print("logits shape", logits.shape)
-
-        num_cols = img_tensor.shape[-1] // W
-
-        # Get some of that confidence in there :0
+        # Get predictions with confidence thresholding
         confidence, predictions = logits.max(dim=1)
-
         confident_mask = confidence >= 0.001
+        final_predictions = torch.where(confident_mask, predictions - 1, torch.zeros_like(predictions))
 
-        final_predictions = torch.full_like(predictions, 0)
-
-        final_predictions[confident_mask] = predictions[confident_mask] - 1
-
-        return final_predictions.view(-1, num_cols)
+        return final_predictions.squeeze(0).view(num_rows, num_cols)
