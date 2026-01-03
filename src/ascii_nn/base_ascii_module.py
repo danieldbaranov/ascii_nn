@@ -8,7 +8,8 @@ FONT_SIZE = 16
 PAD = 0
 RATIO = 2.5
 
-FONT_PATH = str(importlib.resources.files('ascii_nn.data') / 'Saitamaar-Regular.ttf')
+
+FONT_PATH = str(importlib.resources.files('ascii_nn.data') / 'SourceHanCodeJP.ttc')
 FONT = ImageFont.truetype(FONT_PATH, FONT_SIZE)
 
 H = FONT_SIZE + PAD
