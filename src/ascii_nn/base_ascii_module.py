@@ -17,16 +17,7 @@ W = int((FONT_SIZE + PAD) / RATIO + 0.5)
 
 
 class SimpleAsciiModule(nn.Module, ABC):
-    """
-    Base class for ASCII art generation modules.
-    
-    Args:
-        preprocess: Optional preprocessing function for input tensors
-        target_rows: Fixed output rows (0 = derive from image/aspect ratio)
-        target_cols: Fixed output cols (0 = derive from image/aspect ratio)
-        font: PIL font for character rendering
-        font_size: Font size in pixels
-    """
+    """ Base class for ASCII art generation modules """
     
     def __init__(self, preprocess=None, target_rows=0, target_cols=0, font=FONT, font_size=FONT_SIZE):
         super().__init__()
@@ -37,7 +28,7 @@ class SimpleAsciiModule(nn.Module, ABC):
         self.W = int((font_size + PAD) / RATIO + 0.5)
 
     def _prepare_image(self, img_tensor):
-        """Resize image preserving aspect ratio based on target dimensions."""
+        """ Resize image preserving aspect ratio based on target dimensions """
         img_h, img_w = img_tensor.shape[-2], img_tensor.shape[-1]
         aspect = img_w / img_h  # pixel aspect ratio
         
@@ -60,4 +51,5 @@ class SimpleAsciiModule(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, img_tensor):
+        """ The method that has actually does the image -> ascii tensor conversion """
         pass

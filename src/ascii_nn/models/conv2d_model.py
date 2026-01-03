@@ -8,6 +8,8 @@ import kornia
 
 
 class Conv2DModel(SimpleAsciiModule):
+    """ Edge Model that utilizes dot product via Conv2D to find similar characters """
+
     def __init__(self, chars=SHIFT_JIS, target_rows=0, target_cols=0):
         super().__init__(target_rows=target_rows, target_cols=target_cols)
         self.glyph_kernels = self._normalize_kernels(
@@ -22,12 +24,14 @@ class Conv2DModel(SimpleAsciiModule):
     def forward(self, img_tensor):
         img_tensor, num_rows, num_cols = self._prepare_image(img_tensor)
 
+        # Edge detection algorithm (Canny)
         img_tensor = kornia.filters.Canny()(img_tensor)[0]
 
         # Normalize input
         img = img_tensor - img_tensor.mean(dim=(2, 3), keepdim=True)
         img = img / (img.norm(dim=(2, 3), keepdim=True) + 1e-6)
 
+        # Compute logits
         logits = nn.functional.conv2d(
             img,
             self.glyph_kernels,

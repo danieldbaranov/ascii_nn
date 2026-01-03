@@ -3,19 +3,9 @@ from PIL import Image, ImageDraw
 
 from torchvision.transforms import ToTensor
 
-def make_square_kornia(img_tensor):
-    _, _, H, W = img_tensor.shape
-    size = max(H, W)
-
-    pad_h = size - H
-    pad_w = size - W
-
-    # Padding order: (left, right, top, bottom)
-    padding = [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2]
-
-    return torch.nn.functional.pad(img_tensor, padding, mode="constant", value=0)
 
 def char2img(c, font, w, h):
+    """ Get image of character """
     img = Image.new("L", (w, h), 0)
     draw = ImageDraw.Draw(img)
 
@@ -33,6 +23,7 @@ def char2img(c, font, w, h):
     return img
 
 def tensor_to_ascii(tensor, charset):
+    """ Returns ascii art string from tensor"""
     string = ""
     h, w = tensor.shape
     for i in range(h):
@@ -43,6 +34,7 @@ def tensor_to_ascii(tensor, charset):
     return string
 
 def _create_char_tensor(charset, font, w, h ):
+        """ Creates character image tensors by calling char2img() """
         to_tensor = ToTensor()
 
         chars = []

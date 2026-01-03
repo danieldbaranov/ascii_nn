@@ -7,6 +7,8 @@ from ascii_nn.utilities import _create_char_tensor
 
 
 class SSIMModel(SimpleAsciiModule):
+    """ Edge model that utilizes SSIM metric to find the most similar characters """
+
     def __init__(self, chars=SHIFT_JIS, target_rows=0, target_cols=0):
         super().__init__(target_rows=target_rows, target_cols=target_cols)
         self.chars = _create_char_tensor(chars, self.font, self.W, self.H)
@@ -15,11 +17,14 @@ class SSIMModel(SimpleAsciiModule):
     def forward(self, img_tensor):
         img_tensor, num_rows, num_cols = self._prepare_image(img_tensor)
 
+        # Edge detection algorithm (Canny)
         img_tensor = kornia.filters.Canny()(img_tensor)[0]
 
+        # Creating the tile tensors
         unfold = nn.Unfold(kernel_size=(self.H, self.W), stride=(self.H, self.W), padding=0)
         tiles = unfold(img_tensor).squeeze(0).T.view(-1, 1, self.H, self.W)
 
+        # Some vars for later
         num_tiles = len(tiles)
         num_refs = len(self.chars)
 
