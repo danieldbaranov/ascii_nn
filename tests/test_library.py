@@ -5,7 +5,7 @@ from ascii_nn.utilities import tensor_to_ascii
 from ascii_nn.charsets import SHIFT_JIS
 
 MODEL_CLASSES = [Conv2DModel, SSIMModel, IntensityModel]
-TEST_IMAGES = ["tests/osaka.png", "tests/horse.png", "tests/boat.png"]
+TEST_IMAGES = ["tests/images/osaka.png", "tests/images/horse.png", "tests/images/boat.png"]
 SIZE_CONFIGS = [
     {"target_rows": 20, "target_cols": 0},   # rows only (small)
     {"target_rows": 50, "target_cols": 0},   # rows only (medium)
